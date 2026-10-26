@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Liquidação Pix</title>
+    <script src="https://unpkg.com" crossorigin></script>
+    <script src="https://unpkg.com" crossorigin></script>
+    <script src="https://unpkg.com"></script>
+    <script src="https://tailwindcss.com"></script>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function App() {
+            // Estado inicial com a carteira e saldos reais dos 6 personagens
+            const [contas, setContas] = useState([
+                { id: 1001, nome: 'Ana', saldo: 15000.00 },
+                { id: 1002, nome: 'Joaquim', saldo: 1000.00 },
+                { id: 1003, nome: 'Gabriel', saldo: 500.00 },
+                { id: 1004, nome: 'João', saldo: 200.00 },
+                { id: 1005, nome: 'Júlia', saldo: 50.00 },
+                { id: 1006, nome: 'Rafael', saldo: 0.00 }
+            ]);
+
+            // Estados para gerenciar as seleções e alertas da tela
+            const [remetenteId, setRemetenteId] = useState('');
+            const [destinatarioId, setDestinatarioId] = useState('');
+            const [valorPix, setValorPix] = useState('');
+            const [statusMensagem, setStatusMensagem] = useState(null);
+
+            const executarPixSimulado = (e) => {
+                e.preventDefault();
+                
+                if (!remetenteId || !destinatarioId || !valorPix) {
+                    setStatusMensagem({ tipo: 'erro', texto: 'Por favor, preencha todos os campos.' });
+                    return;
+                }
+
+                if (remetenteId === destinatarioId) {
+                    setStatusMensagem({ tipo: 'erro', texto: 'A conta de origem e destino não podem ser iguais.' });
+                    return;
+                }
+
+                const valor = parseFloat(valorPix);
+                if (valor <= 0 || isNaN(valor)) {
+                    setStatusMensagem({ tipo: 'erro', texto: 'Insira um valor de transferência válido.' });
+                    return;
+                }
+
+                const contaOrigem = contas.find(c => c.id === parseInt(remetenteId));
+                
+                // Validação de saldo (Regra de Negócio Crucial)
+                if (contaOrigem.saldo < valor) {
+                    setStatusMensagem({ 
+                        tipo: 'erro', 
+                        texto: `Transação Recusada: ${contaOrigem.nome} não possui saldo suficiente (Saldo: R$ ${contaOrigem.saldo.toFixed(2)}).` 
+                    });
+                    return;
+                }
+
+                // Atualização atômica simulada no Front-End
+                const novasContas = contas.map(conta => {
+                    if (conta.id === parseInt(remetenteId)) {
+                        return { ...conta, saldo: conta.saldo - valor };
+                    }
+                    if (conta.id === parseInt(destinatarioId)) {
+                        return { ...conta, saldo: conta.saldo + valor };
+                    }
+                    return conta;
+                });
+
+                setContas(novasContas);
+                setStatusMensagem({ 
+                    tipo: 'sucesso', 
+                    texto: `Pix de R$ ${valor.toFixed(2)} enviado com sucesso! ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}` 
+                });
+                setValorPix('');
+            };
+
+            return (
+                <div className="min-h-screen bg-[#F7F5F0] text-[#2D2D2D] font-sans antialiased p-4 md:p-8 flex items-center justify-center">
+                    <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-[#EBE7DF] overflow-hidden">
+                        
+                        {/* Cabeçalho Técnico */}
+                        <div className="p-6 bg-[#EBE7DF] border-b border-[#DCD7CD]">
+                            <h1 className="text-lg font-bold text-[#1A1A1A]">Simulador de Liquidação Pix</h1>
+                            <p className="text-xs text-[#555555] mt-1">Ambiente de Testes e Consistência Transacional</p>
+                        </div>
+
+                        {/* Formulário Interativo */}
+                        <form onSubmit={executarPixSimulado} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[#555555] mb-1">Quem vai enviar?</label>
+                                <select 
+                                    value={remetenteId} 
+                                    onChange={(e) => setRemetenteId(e.target.value)}
+                                    className="w-full bg-[#FBFBFA] border border-[#EBE7DF] rounded-xl p-3 text-sm focus:outline-none focus:border-[#C4BDB0]"
+                                >
+                                    <option value="">Selecione o remetente...</option>
+                                    {contas.map(c => (
+                                        <option key={c.id} value={c.id}>{c.nome} (R$ {c.saldo.toFixed(2)})</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[#555555] mb-1">Quem vai receber?</label>
+                                <select 
+                                    value={destinatarioId} 
+                                    onChange={(e) => setDestinatarioId(e.target.value)}
+                                    className="w-full bg-[#FBFBFA] border border-[#EBE7DF] rounded-xl p-3 text-sm focus:outline-none focus:border-[#C4BDB0]"
+                                >
+                                    <option value="">Selecione o destinatário...</option>
+                                    {contas.map(c => (
+                                        <option key={c.id} value={c.id}>{c.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-[#555555] mb-1">Valor do Pix (R$)</label>
+                                <input 
+                                    type="number" 
+                                    step="0.01"
+                                    value={valorPix}
+                                    onChange={(e) => setValorPix(e.target.value)}
+                                    placeholder="0,00"
+                                    className="w-full bg-[#FBFBFA] border border-[#EBE7DF] rounded-xl p-3 text-sm focus:outline-none focus:border-[#C4BDB0]"
+                                />
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                className="w-full bg-[#2D2D2D] hover:bg-[#1A1A1A] text-white font-medium rounded-xl p-3 text-sm transition-colors duration-200 mt-2"
+                            >
+                                Confirmar Transação Pix
+                            </button>
+                        </form>
+
+                        {/* Alertas de Retorno do Sistema */}
+                        {statusMensagem && (
+                            <div className="px-6 pb-4">
+                                <div className={`p-3 rounded-xl text-xs font-medium ${
+                                    statusMensagem.tipo === 'sucesso' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-[#FCE8E6] text-[#C5221F]'
+                                }`}>
+                                    {statusMensagem.texto}
+                                </div>
+                            </div>
+                        )}
+
+                        <hr className="border-[#EBE7DF] mx-6 my-1" />
+
+                        {/* Painel do Livro-Razão (Ledger) */}
+                        <div className="p-6">
+                            <h2 className="text-xs font-bold uppercase tracking-wider text-[#555555] mb-3">Ledger do Banco (Saldos em Tempo Real)</h2>
+                            <div className="space-y-2.5">
+                                {contas.map(conta => (
+                                    <div key={conta.id} className="flex items-center justify-between p-2.5 bg-[#FBFBFA] border border-[#EBE7DF] rounded-xl">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-7 h-7 bg-[#EBE7DF] rounded-full flex items-center justify-center font-bold text-xs text-[#555555]">
+                                                {conta.nome[0]}
+                                            </div>
+                                            <span className="text-sm font-medium text-[#1A1A1A]">{conta.nome}</span>
+                                        </div>
+                                        <span className="text-sm font-semibold tabular-nums text-[#2D2D2D]">
+                                            R$ {conta.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
