@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ledger Engine Simulator</title>
+    <!-- Vinculando o arquivo de estilo externo -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Ledger Engine Simulator ⚡</h1>
+            <p>Motor de Liquidação Pix & Consistência Bancária</p>
+        </header>
+
+        <!-- Área de Exibição dos Saldos -->
+        <div class="card">
+            <h2>Saldos no Livro-Razão</h2>
+            <div class="account">
+                <span>Cliente Origem (1001-1):</span>
+                <strong id="saldoOrigem">R$ 5.000,00</strong>
+            </div>
+            <div class="account">
+                <span>Cliente Destino (2002-2):</span>
+                <strong id="saldoDestino">R$ 1.500,00</strong>
+            </div>
+        </div>
+
+        <!-- Formulário para envio do Pix -->
+        <div class="card">
+            <h2>Simular Envio Pix</h2>
+            <div class="form-group">
+                <label>Valor do Pix (R$)</label>
+                <input type="number" id="valorPix" placeholder="0,00">
+            </div>
+            <button id="btnLiquidar">Liquidar Operação</button>
+        </div>
+    </div>
+
+    <!-- Vinculando a lógica do JavaScript externo -->
+    <script src="script.js"></script>
+</body>
+</html>
